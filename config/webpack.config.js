@@ -100,7 +100,7 @@ const analyzeConfig = merge([parts.analyze()])
 module.exports = env => {
   const config = merge(
     commonConfig,
-    env === 'production' ? productionConfig : developmentConfig,
+    env === 'production' ? productionConfig : developmentConfig
   )
 
   if (process.env.npm_config_analyze) {

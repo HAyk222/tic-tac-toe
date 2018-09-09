@@ -4,7 +4,7 @@ import Phaser from 'phaser'
 
 export const gameConfig = {
   type: Phaser.AUTO,
-  width: 270,
+  width: 670,
   height: 480,
   backgroundColor: '#626262',
   parent: 'gameContainer',
