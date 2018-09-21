@@ -1,93 +1,133 @@
 import Phaser from 'phaser'
 import { SCENE_GAME } from '../constants/Constants'
 import { gameConfig } from '../constants/GameConfig'
+import Game from '../data/Game'
 
 export default class GameScene extends Phaser.Scene {
   constructor () {
     super(SCENE_GAME)
-    this.count=3
-    this.clickCount = 0
+    this.boardSize = 3
     this.spaceSize = 10
-    this.stop = false
+    this.gameData = new Game(this.boardSize)
     this.board = []
-    this.allFields_X = { row: {}, column: {}, mainDiaganal: [], secondDiaganal: [] }
-    this.allFields_O = { row: {}, column: {}, mainDiaganal: [], secondDiaganal: [] }
-    this.rowColumn(this.count)
+    this.getBoard()
+    this.win = false
   }
 
-  rowColumn (n) {
-    for(let i = 0; i < n; ++i){
-      this.allFields_X.row[i] = [];
-      this.allFields_X.column[i] = [];
-      this.allFields_O.row[i] = [];
-      this.allFields_O.column[i] = [];
+  getBoard () {
+    for( let i = 0; i < this.boardSize; i++ ) {
+      for( let j = 0; j < this.boardSize; j++ ) {
+        this.board.push([i,j])
+      }
     }
   }
-
+ 
   getPlatformSize () {
     this.platform = this.add.image(0, 0, 'platform')
-    const { width, height } = this.platform
+    const { width } = this.platform
     this.platform.destroy()
     return width
   }
 
- create () {
-    const boardContainer = this.add.container(0, 0)
-
-    for (let i = 0; i < this.count; ++i) {
-      let arr = [];
-      for (let j = 0; j < this.count; ++j) {
-        const platformContainer = this.add.container(i * (this.getPlatformSize() + this.spaceSize), j * (this.getPlatformSize() + this.spaceSize))
+  create () {
+    // main game
+    this.boardContainer = this.add.container(0, 0)
+    for (let i = 0; i < this.boardSize; ++i) {
+      for (let j = 0; j < this.boardSize; ++j) {
+        const platformContainer = this.add.container(
+          i * (this.getPlatformSize() + this.spaceSize),
+          j * (this.getPlatformSize() + this.spaceSize),
+        )
         const platform = this.add.image(0, 0, 'platform')
         platformContainer.setInteractive(
-          new Phaser.Geom.Circle(0, 0, platform.width / 2),
-          Phaser.Geom.Circle.Contains,
+          new Phaser.Geom.Rectangle(
+            -platform.width / 2,
+            -platform.height / 2,
+            platform.width,
+            platform.height,
+          ),
+          Phaser.Geom.Rectangle.Contains,
         )
         platformContainer.add(platform)
-        boardContainer.add(platformContainer)
-        platformContainer.cordinat = {i,j}
-        arr.push(" ");
+        this.boardContainer.add(platformContainer)
+        platformContainer.setData({ i, j })
       }
-      this.board.push(arr);
     }
-    this.input.on('gameobjectdown', this.drawSymbols, this)
-    boardContainer.x = (gameConfig.width - (this.count-1) * ((this.getPlatformSize() + this.spaceSize))) / 2
-    boardContainer.y = (gameConfig.height - (this.count-1) * ((this.getPlatformSize() + this.spaceSize))) / 2
+    this.input.on('gameobjectdown', this.drawSymbol.bind(this), false)
 
-    console.log(this.board);
+
+    this.boardContainer.x =
+      (gameConfig.width - (this.boardSize-1) * (this.getPlatformSize() + this.spaceSize)) / 2
+    this.boardContainer.y =
+      (gameConfig.height - (this.boardSize-1) * (this.getPlatformSize() + this.spaceSize)) / 2
+  }
+  
+  drawSymbol (pointer, target) {
+    const image = this.add.image(0, 0, 'x')
+    const [i, j] = target.getData(['i', 'j'])
+    target.add(image)
+    target.removeInteractive() 
+    this.findWinner('x', i, j)
+    this.board.forEach( (item) => {
+      if( item[0] == i && item[1] == j ){
+        this.board.splice(this.board.indexOf(item),1)
+      }
+    })
+    this.comp()
   }
 
-  drawSymbols (pointer, target) {
-    if (target.data || this.stop) {
+  findWinner (str,a,b) {
+    this.gameData.makeMove(str, a, b)
+    const maxLength = this.gameData.getMaxLegth(str, a, b)
+    const getFillBoardlength = this.gameData.getFillBoardlength()
+    if (getFillBoardlength === this.boardSize * this.boardSize) {
+      this.noWinner()
+    }
+    if (maxLength === this.boardSize) {
+      this.winner(str)
+      this.win = true
+    }
+  }
+
+  comp () {
+    if(this.board.length == 0 || this.win){
       return
     }
-    this.clickCount++
-    if( this.clickCount % 2 === 1 ) {
-      this.symbol = this.add.image(0, 0, 'x')
-      this.board[ target.cordinat.j ][ target.cordinat.i ] = "X"
-      this.pushArray(this.allFields_X, target.cordinat.j, target.cordinat.i)
-    } else {
-      this.symbol = this.add.image(0, 0, 'o')
-      this.board[ target.cordinat.j ][ target.cordinat.i ] = "O"
-      this.pushArray(this.allFields_O, target.cordinat.j, target.cordinat.i)
-    }
-    this.findWinner(this.allFields_X, target.cordinat.j, target.cordinat.i, "X")
-    this.findWinner(this.allFields_O, target.cordinat.j,target.cordinat.i, "O")
-    target.data = true
-    target.add(this.symbol)
+    let random = Math.floor(Math.random() * this.board.length);
+    let countBoard;
+    this.boardContainer.list.forEach((item, index) => {
+      if( this.board[random] && item.data.list.i == this.board[random][0] && item.data.list.j == this.board[random][1] ){
+        countBoard = index
+      }
+    })
+    const o = this.add.image(0, 0, 'o')
+    this.boardContainer.list[countBoard].add(o)
+    
+    this.findWinner('o', this.board[random][0], this.board[random][1])
+    this.board.splice(this.board.indexOf(this.board[random]),1)
   }
 
-  pushArray ( obj, i, j) {
-    obj.row[i].push([i,j])
-    obj.column[j].push([i,j])
-    if (i == j) { obj.mainDiaganal.push([i,j]) }
-    if (i + j == this.board.length-1) { obj.secondDiaganal.push([i,j]) }
+  noWinner () {
+    const noWinner = this.add.text(0, 100, 'No Winner', {
+      font: '25px Arial',
+      fill: '#fff',
+    })
+    noWinner.setStroke('#292929', 16)
+    noWinner.setShadow(2, 2, '#743f4a', 2, true, true)
+    noWinner.setX((gameConfig.width - noWinner.width) / 2)
   }
 
-  findWinner ( obj, i, j, str ) {
-    if(obj.row[i].length >= this.count || obj.column[j].length >= this.count || obj.mainDiaganal.length >= this.count || obj.secondDiaganal.length >= this.count){
-        this.add.text(10, 10, `${str} win!`, {color:"#ffffff",fontSize:"30px"})
-        this.stop = true
-    }
+  winner (str) {
+    const winner = this.add.text(0, 100, `The winner is ${str}`, {
+      font: '25px Arial',
+      fill: '#fff',
+    })
+    winner.setStroke('#292929', 16)
+    winner.setShadow(2, 2, '#743f4a', 2, true, true)
+    winner.setX((gameConfig.width - winner.width) / 2)
+
+    this.scene.pause(SCENE_GAME)
   }
+
+  update () {}
 }

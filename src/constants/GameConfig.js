@@ -6,7 +6,7 @@ export const gameConfig = {
   type: Phaser.AUTO,
   width: window.innerWidth,
   height: window.innerHeight,
-  backgroundColor: '#626262',
+  backgroundColor: '#707070',
   parent: 'gameContainer',
-  scene: [BootScene, GameScene],
+  scene: [BootScene, GameScene]
 }
