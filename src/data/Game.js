@@ -6,21 +6,20 @@ export default class Game {
   }
 
   makeMove (character, i, j) {
-    this[character].rows[i].push(j)
-    this[character].columns[j].push(i)
+    this[character].rows[i].push([i, j])
+    this[character].columns[j].push([i, j])
 
     if (i === j) {
-      this[character].mainDiagonal.push(i)
+      this[character].mainDiagonal.push([i, j])
     }
 
     if (i + j === this.boardSize - 1) {
-      this[character].secondaryDiagonal.push(i)
+      this[character].secondaryDiagonal.push([i, j])
     }
   }
 
   getFillBoardlength () {
-    const a = this.fillBoardLoop(this.x) + this.fillBoardLoop(this.o)
-    return a
+    return this.fillBoardLoop(this.x) + this.fillBoardLoop(this.o)
   }
 
   fillBoardLoop (char) {
@@ -30,6 +29,35 @@ export default class Game {
       boardLenght += char.rows[el].length
     }
     return boardLenght
+  }
+
+  board (n) {
+    const board = [];
+    for (let i = 0; i < n; i++) {
+      for (let j = 0; j < n; j++) {
+        board.push([i, j])
+      }
+    }
+    return board
+  }
+
+  delBordEl (char, boardArr) {
+    for (let el in char.rows) {
+      char.rows[el].forEach( item => {
+        boardArr.forEach( el => {
+          if(el[0] == item[0] && el[1] == item[1]){
+            boardArr.splice(boardArr.indexOf(el),1)
+          }
+        }) 
+      })
+    }
+  }
+
+  getCurrentBoard () {
+    const board = this.board(this.boardSize)
+    this.delBordEl(this.x, board)
+    this.delBordEl(this.o, board)
+    return board;
   }
 
   getMaxLegth (character, i, j) {

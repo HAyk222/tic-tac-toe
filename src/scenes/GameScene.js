@@ -9,19 +9,8 @@ export default class GameScene extends Phaser.Scene {
     this.boardSize = 3
     this.spaceSize = 10
     this.gameData = new Game(this.boardSize)
-    this.board = []
-    this.getBoard()
-    this.win = false
   }
 
-  getBoard () {
-    for( let i = 0; i < this.boardSize; i++ ) {
-      for( let j = 0; j < this.boardSize; j++ ) {
-        this.board.push([i,j])
-      }
-    }
-  }
- 
   getPlatformSize () {
     this.platform = this.add.image(0, 0, 'platform')
     const { width } = this.platform
@@ -55,7 +44,6 @@ export default class GameScene extends Phaser.Scene {
     }
     this.input.on('gameobjectdown', this.drawSymbol.bind(this), false)
 
-
     this.boardContainer.x =
       (gameConfig.width - (this.boardSize-1) * (this.getPlatformSize() + this.spaceSize)) / 2
     this.boardContainer.y =
@@ -66,13 +54,9 @@ export default class GameScene extends Phaser.Scene {
     const image = this.add.image(0, 0, 'x')
     const [i, j] = target.getData(['i', 'j'])
     target.add(image)
-    target.removeInteractive() 
+    target.removeInteractive()
+
     this.findWinner('x', i, j)
-    this.board.forEach( (item) => {
-      if( item[0] == i && item[1] == j ){
-        this.board.splice(this.board.indexOf(item),1)
-      }
-    })
     this.comp()
   }
 
@@ -87,24 +71,25 @@ export default class GameScene extends Phaser.Scene {
       this.winner(str)
       this.win = true
     }
+    this.gameData.getCurrentBoard()
+    console.log(this.gameData.getCurrentBoard());
   }
 
   comp () {
-    if(this.board.length == 0 || this.win){
+    const currentBoard = this.gameData.getCurrentBoard() 
+    if(currentBoard.length == 0 || this.win){
       return
     }
-    let random = Math.floor(Math.random() * this.board.length);
+    let random = Math.floor(Math.random() * currentBoard.length);
     let countBoard;
     this.boardContainer.list.forEach((item, index) => {
-      if( this.board[random] && item.data.list.i == this.board[random][0] && item.data.list.j == this.board[random][1] ){
+      if( currentBoard[random] && item.data.list.i == currentBoard[random][0] && item.data.list.j == currentBoard[random][1] ){
         countBoard = index
       }
     })
     const o = this.add.image(0, 0, 'o')
     this.boardContainer.list[countBoard].add(o)
-    
-    this.findWinner('o', this.board[random][0], this.board[random][1])
-    this.board.splice(this.board.indexOf(this.board[random]),1)
+    this.findWinner('o', currentBoard[random][0], currentBoard[random][1])
   }
 
   noWinner () {
