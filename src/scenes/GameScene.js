@@ -72,7 +72,7 @@ export default class GameScene extends Phaser.Scene {
       this.win = true
     }
     this.gameData.getCurrentBoard()
-    console.log(this.gameData.getCurrentBoard());
+    // console.log(this.gameData.getCurrentBoard());
   }
 
   comp () {
