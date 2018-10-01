@@ -21,6 +21,7 @@ export default class GameScene extends Phaser.Scene {
   create () {
     // main game
     this.boardContainer = this.add.container(0, 0)
+    let arr = []
     for (let i = 0; i < this.boardSize; ++i) {
       for (let j = 0; j < this.boardSize; ++j) {
         const platformContainer = this.add.container(
@@ -40,6 +41,7 @@ export default class GameScene extends Phaser.Scene {
         platformContainer.add(platform)
         this.boardContainer.add(platformContainer)
         platformContainer.setData({ i, j })
+        arr=[i,j]
       }
     }
     this.input.on('gameobjectdown', this.drawSymbol.bind(this), false)
@@ -48,6 +50,12 @@ export default class GameScene extends Phaser.Scene {
       (gameConfig.width - (this.boardSize-1) * (this.getPlatformSize() + this.spaceSize)) / 2
     this.boardContainer.y =
       (gameConfig.height - (this.boardSize-1) * (this.getPlatformSize() + this.spaceSize)) / 2
+
+    let random = Math.floor(Math.random() * 2);
+    if(random == 0){
+      this.comp()
+    }
+    console.log(random);
   }
   
   drawSymbol (pointer, target) {

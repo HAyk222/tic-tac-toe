@@ -162,11 +162,15 @@ export default class Game {
     var empty = [];
     var noWinner = [];
 
-    
+    var obj = {
+      arrMin:[]
+    }
     for(let el in data){
       // console.log(data[el]);
       if(el != "mainDiagonal" && el != "secondaryDiagonal"){
         for(let key in data[el]){
+
+
           if(data[el][key]["min"] == 100){
             this.pushArr(data[el][key]["arr"],arrayWin)
           }
@@ -193,6 +197,7 @@ export default class Game {
 
         }
       } else {
+
         if(data[el]["min"] == 100){
           this.pushArr(data[el]["arr"],arrayWin)
         }
@@ -217,9 +222,8 @@ export default class Game {
           this.pushArr(data[el]["arr"],noWinner)
         }
       }
-
-
     }
+    console.log("obj",obj)
 
     let arrX = arrayX.filter(item => item[0] == item[1] && item[0] + item[1] == this.boardSize-1)
     if(arrX.length == 0){
